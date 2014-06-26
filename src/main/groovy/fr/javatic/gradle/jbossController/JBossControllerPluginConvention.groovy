@@ -18,4 +18,9 @@ package fr.javatic.gradle.jbossController
 
 class JBossControllerPluginConvention {
     final Class JBossController = fr.javatic.gradle.jbossController.JBossControllerTask
+    final Class JBossAddDatasource = fr.javatic.gradle.jbossController.JBossAddDatasource
+    final Class JBossRemoveDatasource = fr.javatic.gradle.jbossController.JBossRemoveDatasource
+    final Class JBossRemoveXADatasource = fr.javatic.gradle.jbossController.JBossRemoveXADatasource
+    final Class JBossURLDeployTask = fr.javatic.gradle.jbossController.JBossURLDeployTask
+    final Class JBossPrintDeploymentTask = fr.javatic.gradle.jbossController.JBossPrintDeploymentTask
 }

@@ -1,27 +1,21 @@
 apply plugin: 'groovy'
 apply plugin: 'maven-publish'
+apply plugin: 'signing'
 
 group = 'fr.javatic.gradle'
-version = '0.1-SNAPSHOT'
+version = '1.0'
 
-sourceCompatibility = 1.5
+sourceCompatibility = 1.6
+targetCompatibility = 1.6
 
 repositories {
-    maven {
-        def nexusUrl = System.getenv("NEXUS_URL")
-        if (nexusUrl == null || nexusUrl.isEmpty()) {
-            nexusUrl = 'http://frlnxdev001.fr.lactadom.ad/nexus/content/groups/Gmp/'
-        }
-        url = nexusUrl
-    }
     mavenCentral()
-    mavenLocal()
 }
 
 dependencies {
     compile gradleApi()
     compile localGroovy()
-    compile 'org.jboss.as:jboss-as-controller-client:7.3.0.Final-redhat-14'
+    compile 'org.jboss.as:jboss-as-controller-client:7.2.0.Final'
 }
 
 tasks['javadoc'].failOnError false
@@ -36,42 +30,48 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
     from javadoc.destinationDir
 }
 
-task testJar(type: Jar) {
-    classifier = 'test'
-    from sourceSets.test.output
-}
-
-task testSourceJar(type: Jar) {
-    classifier = 'test-src'
-    from sourceSets.test.allJava
-}
-
-task testJavadoc(type: Javadoc) {
-    failOnError false
-    source sourceSets.test.allJava
-}
-
-task testJavadocJar(type: Jar, dependsOn: testJavadoc) {
-    classifier = 'test-javadoc'
-    from testJavadoc.destinationDir
+signing {
+    sign configurations.archives
+    sign sourceJar
+    sign javadocJar
 }
 
 publishing {
     publications {
         mavenJava(MavenPublication) {
             from components.java
-            artifact sourceJar
-            artifact javadocJar
+            artifact sourceJar {
+                classifier "sources"
+            }
+            artifact javadocJar {
+                classifier "javadoc"
+            }
 
+            pom.withXml {
+                asNode().appendNode('name', "$group:$name")
+                asNode().appendNode('url', 'https://github.com/ylemoigne/gradle-jboss-controller')
+                asNode().appendNode('description', 'Gradle plugin which allow deployment and configuration of JBoss AS 7.x (or EAP 6.x)')
+
+                def licenseNode = asNode().appendNode('licenses').appendNode('license')
+                licenseNode.appendNode('name', "The Apache Software License, Version 2.0")
+                licenseNode.appendNode('url', "http://www.apache.org/licenses/LICENSE-2.0.txt")
+
+                def developerNode = asNode().appendNode('developers').appendNode('developer')
+                developerNode.appendNode('name', "Yann Le Moigne")
+                developerNode.appendNode('email', "ylemoigne@javatic.fr")
+                developerNode.appendNode('organization', "JavaTIC")
+                developerNode.appendNode('organizationUrl', "http://www.javatic.fr")
+
+                def scmNode = asNode().appendNode('scm')
+                scmNode.appendNode('connection', "scm:git:git@github.com:ylemoigne/gradle-jboss-controller.git")
+                scmNode.appendNode('developerConnection', "scm:git:git@github.com:ylemoigne/gradle-jboss-controller.git")
+                scmNode.appendNode('url', "git@github.com:ylemoigne/gradle-jboss-controller.git")
+            }
         }
     }
     repositories {
         maven {
-            credentials {
-                username 'admin'
-                password 'admin123'
-            }
-            url "http://frlnxdev001.fr.lactadom.ad/nexus/content/repositories/gmp-artifacts-snapshots/"
+            //url "Pending"
         }
     }
 }

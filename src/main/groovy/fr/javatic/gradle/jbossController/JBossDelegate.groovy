@@ -18,6 +18,9 @@ package fr.javatic.gradle.jbossController
 
 import org.jboss.dmr.ModelNode
 
+import static org.jboss.as.controller.client.helpers.ClientConstants.OP
+import static org.jboss.as.controller.client.helpers.ClientConstants.OP_ADDR
+
 class JBossDelegate {
     private List<Address> addresses
 
@@ -62,7 +65,7 @@ class JBossDelegate {
         def List<ModelNode> toModelNode() {
             operations.collect { op ->
                 ModelNode operationNode = op.toModelNode()
-                operationNode.get("address").set(addressNode)
+                operationNode.get(OP_ADDR).set(addressNode)
                 return operationNode
             }
         }
@@ -78,7 +81,7 @@ class JBossDelegate {
 
             def ModelNode toModelNode() {
                 ModelNode node = new ModelNode()
-                node.get("operation").set(name)
+                node.get(OP).set(name)
                 this.parameters.each { k, v ->
                     if (v instanceof Map ||
                             v instanceof List) {
