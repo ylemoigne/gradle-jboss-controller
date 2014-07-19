@@ -9,20 +9,74 @@ At this time, you need to checkout and build the plugin by yourself
 
 Usage
 =====
+
+Commons
+-------
+
     buildscript {
         repositories {
-            mavenLocal()
+            mavenCentral()
         }
 
         dependencies {
-            classpath 'fr.javatic.gradle:gradle-jboss-controller:0.1-SNAPSHOT'
+            classpath 'fr.javatic.gradle:gradle-jboss-controller:1.0'
         }
     }
 
     apply plugin: 'jboss-controller'
 
+Basic Task
+----------
+
+    task installFooDs(type: JBossAddDatasource) { // You use the type JBossAddXADatasource
+        host = jbossHost
+        port = portManagementNative
+
+        username = jbossAdminLogin
+        password = jbossAdminPassword
+
+        dsUser = defaultAuthBddUser
+        dsPassword = defaultAuthBddPassword
+        dsDriver = "mysql"
+        dsJdbcUrl = "jdbc:mysql:mysql://localhost:3306/foo"
+    }
+
+    task removeSampleDatasource(type: JBossRemoveDatasource) { // or JBossRemoveXADatasource
+        host = jbossHost
+        port = portManagementNative
+
+        username = jbossAdminLogin
+        password = jbossAdminPassword
+
+        dsName = "ExampleDS"
+    }
+
+    task deployMyWebapp(type: JBossURLDeployTask) {
+        host = jbossHost
+        port = portManagementNative
+
+        username = jbossAdminLogin
+        password = jbossAdminPassword
+
+        url = new URL("file://Users/ylemoigne/MyWebapp.war")
+    }
+
+    task printDeployments(type: JBossPrintDeploymentTask) {
+        mustRunAfter startInstance
+
+        host = jbossHost
+        port = portManagementNative
+
+        username = jbossAdminLogin
+        password = jbossAdminPassword
+    }
+
+Advanced Task
+-------------
+This task use the wrap a micro-dsl around jboss management model api. This allow you to alter almost any JBoss configuration parameter.
+
     task configureJBoss(type: JBossController) {
-        host = managedConfig.defaultServeurHost
+        host = 'localhost'
         port = 9999
 
         username = "foo"
@@ -65,3 +119,4 @@ Usage
             }
         }
     }
+
