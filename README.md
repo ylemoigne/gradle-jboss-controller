@@ -2,11 +2,6 @@ gradle-jboss-controller
 ================
 Basic support for controlling a jboss instance.
 
-Warning
-=======
-This is my very first prototype, not yet idiomatic groovy source code and supporting only jboss-eap-6.2.0
-At this time, you need to checkout and build the plugin by yourself
-
 Usage
 =====
 
@@ -35,10 +30,11 @@ Basic Task
         username = jbossAdminLogin
         password = jbossAdminPassword
 
+        dsName = "foo"
         dsUser = defaultAuthBddUser
         dsPassword = defaultAuthBddPassword
         dsDriver = "mysql"
-        dsJdbcUrl = "jdbc:mysql:mysql://localhost:3306/foo"
+        dsJdbcUrl = "jdbc:mysql://localhost:3306/foo"
     }
 
     task removeSampleDatasource(type: JBossRemoveDatasource) { // or JBossRemoveXADatasource
