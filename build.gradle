@@ -12,7 +12,7 @@ apply plugin: 'groovy'
 apply plugin: 'nexus'
 
 group = 'fr.javatic.gradle'
-version = '1.0'
+version = '1.1-SNAPSHOT'
 
 sourceCompatibility = 1.6
 targetCompatibility = 1.6
