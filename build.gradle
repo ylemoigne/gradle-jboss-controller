@@ -1,6 +1,15 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'org.gradle.api.plugins:gradle-nexus-plugin:0.7.1'
+    }
+}
+
 apply plugin: 'groovy'
-apply plugin: 'maven-publish'
-apply plugin: 'signing'
+apply plugin: 'nexus'
 
 group = 'fr.javatic.gradle'
 version = '1.0'
@@ -18,60 +27,32 @@ dependencies {
     compile 'org.jboss.as:jboss-as-controller-client:7.2.0.Final'
 }
 
-tasks['javadoc'].failOnError false
+modifyPom {
+    project {
+        name "$group:$name"
+        description 'Gradle plugin which allow deployment and configuration of JBoss AS 7.x (or EAP 6.x)'
+        url 'https://github.com/ylemoigne/gradle-jboss-controller'
 
-task sourceJar(type: Jar) {
-    classifier = 'src'
-    from sourceSets.main.allJava
-}
+        scm {
+            connection "scm:git:git@github.com:ylemoigne/gradle-jboss-controller.git"
+            developerConnection "scm:git:git@github.com:ylemoigne/gradle-jboss-controller.git"
+            url "git@github.com:ylemoigne/gradle-jboss-controller.git"
+        }
 
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
-}
-
-signing {
-    sign configurations.archives
-    sign sourceJar
-    sign javadocJar
-}
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
-            artifact sourceJar {
-                classifier "sources"
-            }
-            artifact javadocJar {
-                classifier "javadoc"
-            }
-
-            pom.withXml {
-                asNode().appendNode('name', "$group:$name")
-                asNode().appendNode('url', 'https://github.com/ylemoigne/gradle-jboss-controller')
-                asNode().appendNode('description', 'Gradle plugin which allow deployment and configuration of JBoss AS 7.x (or EAP 6.x)')
-
-                def licenseNode = asNode().appendNode('licenses').appendNode('license')
-                licenseNode.appendNode('name', "The Apache Software License, Version 2.0")
-                licenseNode.appendNode('url', "http://www.apache.org/licenses/LICENSE-2.0.txt")
-
-                def developerNode = asNode().appendNode('developers').appendNode('developer')
-                developerNode.appendNode('name', "Yann Le Moigne")
-                developerNode.appendNode('email', "ylemoigne@javatic.fr")
-                developerNode.appendNode('organization', "JavaTIC")
-                developerNode.appendNode('organizationUrl', "http://www.javatic.fr")
-
-                def scmNode = asNode().appendNode('scm')
-                scmNode.appendNode('connection', "scm:git:git@github.com:ylemoigne/gradle-jboss-controller.git")
-                scmNode.appendNode('developerConnection', "scm:git:git@github.com:ylemoigne/gradle-jboss-controller.git")
-                scmNode.appendNode('url', "git@github.com:ylemoigne/gradle-jboss-controller.git")
+        licenses {
+            license {
+                name 'The Apache Software License, Version 2.0'
+                url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
             }
         }
-    }
-    repositories {
-        maven {
-            url "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+
+        developers {
+            developer {
+                name "Yann Le Moigne"
+                email "ylemoigne@javatic.fr"
+                organization "JavaTIC"
+                organizationUrl "http://www.javatic.fr"
+            }
         }
     }
 }
