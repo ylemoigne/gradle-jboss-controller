@@ -1,21 +1,22 @@
 buildscript {
     repositories {
         jcenter()
+        maven { url 'http://dl.bintray.com/gradle/gradle-plugins' }
     }
 
     dependencies {
-        classpath 'org.gradle.api.plugins:gradle-nexus-plugin:0.7.1'
+        classpath 'org._10ne.gradle:rest-gradle-plugin:0.2.0'
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:0.5'
     }
 }
 
 apply plugin: 'groovy'
-apply plugin: 'nexus'
+apply plugin: 'maven-publish'
+apply plugin: 'com.jfrog.bintray'
+apply plugin: 'rest'
 
 group = 'fr.javatic.gradle'
-version = '1.1-SNAPSHOT'
-
-sourceCompatibility = 1.6
-targetCompatibility = 1.6
+version = '1.1'
 
 repositories {
     mavenCentral()
@@ -23,36 +24,134 @@ repositories {
 
 dependencies {
     compile gradleApi()
-    compile localGroovy()
     compile 'org.jboss.as:jboss-as-controller-client:7.2.0.Final'
 }
 
-modifyPom {
-    project {
-        name "$group:$name"
-        description 'Gradle plugin which allow deployment and configuration of JBoss AS 7.x (or EAP 6.x)'
-        url 'https://github.com/ylemoigne/gradle-jboss-controller'
+compileGroovy {
+    sourceCompatibility = 1.6
+    targetCompatibility = 1.6
+}
 
-        scm {
-            connection "scm:git:git@github.com:ylemoigne/gradle-jboss-controller.git"
-            developerConnection "scm:git:git@github.com:ylemoigne/gradle-jboss-controller.git"
-            url "git@github.com:ylemoigne/gradle-jboss-controller.git"
-        }
+def javaApiUrl = 'http://docs.oracle.com/javase/1.7.0/docs/api/'
+def groovyApiUrl = 'http://groovy.codehaus.org/gapi/'
+tasks.withType(Javadoc) {
+    options.links(javaApiUrl, groovyApiUrl)
+}
 
-        licenses {
-            license {
-                name 'The Apache Software License, Version 2.0'
-                url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-            }
-        }
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from 'build/docs/javadoc'
+}
 
-        developers {
-            developer {
-                name "Yann Le Moigne"
-                email "ylemoigne@javatic.fr"
-                organization "JavaTIC"
-                organizationUrl "http://www.javatic.fr"
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allSource
+    classifier = 'sources'
+}
+
+def projectInfo = [
+        description: 'Gradle plugin which allow deployment and configuration of JBoss AS 7.x (or EAP 6.x)',
+        url        : 'https://github.com/ylemoigne/gradle-jboss-controller',
+        issues     : 'https://github.com/ylemoigne/gradle-jboss-controller/issues',
+        tags       : ['jboss', 'gradle'],
+        scm        : [
+                url     : "git@github.com:ylemoigne/gradle-jboss-controller.git",
+                mavenUrl: "scm:git:git@github.com:ylemoigne/gradle-jboss-controller.git",
+        ],
+        license    : [
+                shortName: 'Apache-2.0',
+                fullName : 'The Apache Software License, Version 2.0',
+                url      : 'http://www.apache.org/licenses/LICENSE-2.0.txt',
+        ]
+]
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            artifact sourcesJar
+            artifact javadocJar
+
+            pom.withXml {
+                asNode().children().last() + {
+                    resolveStrategy = Closure.DELEGATE_FIRST
+
+                    name project.name
+                    description projectInfo.description
+                    url projectInfo.url
+
+                    scm {
+                        connection projectInfo.scm.mavenUrl
+                        developerConnection projectInfo.scm.mavenUrl
+                        url projectInfo.scm.url
+                    }
+
+                    licenses {
+                        license {
+                            name projectInfo.license.fullName
+                            url projectInfo.license.url
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            name "Yann Le Moigne"
+                            email "ylemoigne@javatic.fr"
+                            organization "JavaTIC"
+                            organizationUrl "http://www.javatic.fr"
+                        }
+                    }
+                }
             }
         }
     }
 }
+
+bintray {
+    user = bintrayUser
+    key = bintrayKey
+    publications = ['mavenJava']
+    pkg {
+        repo = 'gradle-plugin'
+        name = project.name
+        desc = projectInfo.description
+        websiteUrl = projectInfo.url
+        issueTrackerUrl = projectInfo.issues
+        vcsUrl = projectInfo.scm.url
+        licenses = [projectInfo.license.shortName]
+        labels = projectInfo.tags
+        version {
+            attributes = ['gradle-plugin': 'fr.javatic.jboss-controller:fr.javatic.gradle:gradle-jboss-controller']
+        }
+    }
+}
+
+task bintraySignVersion(type: org._10ne.gradle.rest.RestTask, description: 'Sign version files') {
+    mustRunAfter bintrayUpload
+
+    httpMethod = 'post'
+    uri = "https://api.bintray.com/gpg/${bintray.user}/${bintray.pkg.repo}/${project.name}/versions/${project.version}"
+    username = bintray.user
+    password = bintray.key
+}
+
+task bintrayPublish(type: org._10ne.gradle.rest.RestTask, description: 'Publish version files') {
+    mustRunAfter bintraySignVersion
+
+    httpMethod = 'post'
+    uri = "https://api.bintray.com/content/${bintray.user}/${bintray.pkg.repo}/${project.name}/${project.version}/publish"
+    username = bintray.user
+    password = bintray.key
+}
+
+task bintrayToCentral(type: org._10ne.gradle.rest.RestTask, dependsOn: 'bintraySignVersion', description: 'Sync to maven central') {
+    mustRunAfter bintraySignVersion
+
+    httpMethod = 'post'
+    uri = "https://api.bintray.com/maven_central_sync/${bintray.user}/${bintray.pkg.repo}/${project.name}/versions/${project.version}"
+    username = bintray.user
+    password = bintray.key
+    requestContentType = groovyx.net.http.ContentType.JSON
+    requestBody = [username: nexusUsername, password: nexusPassword]
+}
+
+task publishToPublic(dependsOn: [bintrayUpload, bintrayPublish, bintraySignVersion, bintrayToCentral])

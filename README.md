@@ -14,11 +14,11 @@ Commons
         }
 
         dependencies {
-            classpath 'fr.javatic.gradle:gradle-jboss-controller:1.0'
+            classpath 'fr.javatic.gradle:gradle-jboss-controller:1.1'
         }
     }
 
-    apply plugin: 'jboss-controller'
+    apply plugin: 'fr.javatic.jboss-controller'
 
 Basic Task
 ----------
