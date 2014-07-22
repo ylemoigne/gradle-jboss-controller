@@ -10,7 +10,8 @@ Commons
 
     buildscript {
         repositories {
-            mavenCentral()
+            jcenter()
+            // or mavenCentral()
         }
 
         dependencies {
