@@ -2,11 +2,15 @@ gradle-jboss-controller
 ================
 Basic support for controlling a jboss instance.
 
+Changelog
+=========
+Fix auto import for JBossAddXADatasource task.
+
 Usage
 =====
 
-Commons
--------
+Basic with Gradle 2.0
+-----------
 
     buildscript {
         repositories {
@@ -15,11 +19,18 @@ Commons
         }
 
         dependencies {
-            classpath 'fr.javatic.gradle:gradle-jboss-controller:1.1'
+            classpath 'fr.javatic.gradle:gradle-jboss-controller:1.2'
         }
     }
 
     apply plugin: 'fr.javatic.jboss-controller'
+
+Basic with Gradle 2.1
+-----------
+
+    plugins {
+      id "fr.javatic.jboss-controller" version "1.1"
+    }
 
 Basic Task
 ----------
