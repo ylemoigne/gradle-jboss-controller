@@ -30,7 +30,7 @@ class DeploymentInspector {
         final ModelNode listDeploymentsResult = client.execute(op);
         final List<String> result = new ArrayList<String>();
         if (Operations.isSuccessfulOutcome(listDeploymentsResult)) {
-            final List<ModelNode> deployments = readResult(listDeploymentsResult).asList();
+            final List<ModelNode> deployments = Operations.readResult(listDeploymentsResult).asList();
             for (ModelNode n : deployments) {
                 result.add(n.asString());
             }
