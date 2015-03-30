@@ -15,17 +15,14 @@
  */
 
 package fr.javatic.gradle.jbossController
+
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskExecutionException
 import org.jboss.as.controller.client.ModelControllerClient
 import org.jboss.as.controller.client.helpers.standalone.*
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 class JBossURLDeployTask extends DefaultTask {
-    private final static Logger LOGGER = LoggerFactory.getLogger(JBossURLDeployTask)
-
     String host
     int port
 
@@ -50,11 +47,11 @@ class JBossURLDeployTask extends DefaultTask {
 
             DeploymentPlan plan = null;
             if (isRedeploy) {
-                LOGGER.info("Redeploy '${url}' as '${deploymenName}'" as String)
+                logger.info("Redeploy '${url}' as '${deploymenName}'" as String)
                 DeploymentPlanBuilder builder = serverDeploymentManager.newDeploymentPlan().replace(deploymenName, url).redeploy(deploymenName)
                 plan = builder.build()
             } else {
-                LOGGER.info("Deploy '${url}' as '${deploymenName}'" as String)
+                logger.info("Deploy '${url}' as '${deploymenName}'" as String)
                 DeploymentPlanBuilder builder = serverDeploymentManager.newDeploymentPlan().add(url).deploy(deploymenName)
                 plan = builder.build()
             }
@@ -62,23 +59,16 @@ class JBossURLDeployTask extends DefaultTask {
             ServerDeploymentPlanResult planResult = serverDeploymentManager.execute(plan).get()
             for (DeploymentAction action : plan.getDeploymentActions()) {
                 final ServerDeploymentActionResult actionResult = planResult.getDeploymentActionResult(action.getId());
-                final Throwable t = actionResult.getDeploymentException()
-
-                String message = "No Reason"
-                if (t != null) {
-                    message = t.get
-                }
-
                 final ServerUpdateActionResult.Result result = actionResult.getResult();
                 switch (result) {
                     case ServerUpdateActionResult.Result.FAILED:
-                        LOGGER.error("FAILED", actionResult.getDeploymentException())
+                        logger.error("FAILED", actionResult.getDeploymentException())
                         throw new TaskExecutionException(this, actionResult.getDeploymentException());
                     case ServerUpdateActionResult.Result.NOT_EXECUTED:
-                        LOGGER.error("NOT_EXECUTED", actionResult.getDeploymentException())
+                        logger.error("NOT_EXECUTED", actionResult.getDeploymentException())
                         throw new TaskExecutionException(this, actionResult.getDeploymentException());
                     case ServerUpdateActionResult.Result.ROLLED_BACK:
-                        LOGGER.error("ROLLED_BACK", actionResult.getDeploymentException())
+                        logger.error("ROLLED_BACK", actionResult.getDeploymentException())
                         throw new TaskExecutionException(this, actionResult.getDeploymentException());
                 }
             }
