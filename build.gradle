@@ -23,6 +23,7 @@ repositories {
 dependencies {
     compile gradleApi()
     compile 'org.jboss.as:jboss-as-controller-client:7.2.0.Final'
+    testCompile 'junit:junit:4.12'
 }
 
 compileGroovy {

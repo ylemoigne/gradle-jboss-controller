@@ -24,7 +24,7 @@ class JBossControllerPluginTest {
     @Test
     public void greeterPluginAddsGreetingTaskToProject() {
         Project project = ProjectBuilder.builder().build()
-        project.apply plugin: 'jboss-controller'
+        project.apply plugin: 'fr.javatic.jboss-controller'
 
         project.task('testTask', type: project.JBossController) {
             host = 'localhost'
