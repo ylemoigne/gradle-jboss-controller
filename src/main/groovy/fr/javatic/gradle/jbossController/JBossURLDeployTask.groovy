@@ -37,22 +37,20 @@ class JBossURLDeployTask extends DefaultTask {
 
     @TaskAction
     def run() {
-        String deploymenName = this.deployName != null ? this.deployName : url.path.substring(url.path.lastIndexOf("/") + 1)
+        String deploymentName = getDeployName() ?: deployNameFromPath()
 
-        ModelControllerClient client = ModelControllerClient.Factory.create(host as String, port, new SimpleCallbackHandler(this.username, this.password));
-        boolean isRedeploy = DeploymentInspector.getDeployments(client).contains(deploymenName)
-
+        ModelControllerClient client = getClient();
         try {
             ServerDeploymentManager serverDeploymentManager = ServerDeploymentManager.Factory.create(client)
 
             DeploymentPlan plan = null;
-            if (isRedeploy) {
-                logger.info("Redeploy '${url}' as '${deploymenName}'" as String)
-                DeploymentPlanBuilder builder = serverDeploymentManager.newDeploymentPlan().replace(deploymenName, url).redeploy(deploymenName)
+            if (isRedeploy(client, deploymentName)) {
+                logger.info("Redeploy '${url}' as '${deploymentName}'" as String)
+                DeploymentPlanBuilder builder = serverDeploymentManager.newDeploymentPlan().replace(deploymentName, getUrl()).redeploy(deploymentName)
                 plan = builder.build()
             } else {
-                logger.info("Deploy '${url}' as '${deploymenName}'" as String)
-                DeploymentPlanBuilder builder = serverDeploymentManager.newDeploymentPlan().add(url).deploy(deploymenName)
+                logger.info("Deploy '${url}' as '${deploymentName}'" as String)
+                DeploymentPlanBuilder builder = serverDeploymentManager.newDeploymentPlan().add(getUrl()).deploy(deploymentName)
                 plan = builder.build()
             }
 
@@ -77,5 +75,18 @@ class JBossURLDeployTask extends DefaultTask {
                 client.close();
             }
         }
+    }
+
+    private String deployNameFromPath() {
+        getUrl().path.substring(getUrl().path.lastIndexOf("/") + 1)
+    }
+
+    private ModelControllerClient getClient() {
+        ModelControllerClient.Factory.create(getHost() as String, getPort(), new SimpleCallbackHandler(getUsername(),
+                getPassword()))
+    }
+
+    private static boolean isRedeploy(ModelControllerClient client, String deploymentName) {
+        DeploymentInspector.getDeployments(client).contains(deploymentName)
     }
 }
